@@ -1,16 +1,25 @@
 ---
-import '../styles/global.css';
+import "../styles/global.css";
 const { content } = Astro.props;
+import Sidebar from "@/components/react/side-bar";
+import Navbar from "@/components/react/nav-bar";
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<title>{content.title}</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{content.title}</title>
+  </head>
+  <body class="min-h-screen font-onest flex bg-neutral-50/20">
+    <Sidebar client:load />
+
+    <div class="md:flex-1 w-full flex flex-col">
+      <Navbar client:load />
+      <main class="flex-1 relative">
+        <slot />
+      </main>
+    </div>
+  </body>
 </html>

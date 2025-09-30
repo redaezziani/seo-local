@@ -1,25 +1,23 @@
 ---
-import '../styles/global.css';
-// Component Imports
-import Button from '../components/Button.astro';
-
-// Full Astro Component Syntax:
-// https://docs.astro.build/basics/astro-components/
+import AboutMe from "@/components/react/about-me";
+import Main from "@/layouts/main.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro + TailwindCSS</title>
-	</head>
-
-	<body>
-		<div class="grid place-items-center h-screen content-center">
-			<Button>Tailwind Button in Astro!</Button>
-			<a href="/markdown-page" class="p-4 underline">Markdown is also supported...</a>
-		</div>
-	</body>
-</html>
+<Main content={{ title: "Home" }}>
+  <div
+    class="flex flex-col justify-start items-start gap-6 mt-20 px-4 md:px-20"
+  >
+    <h1
+      class="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-rose-500 to-red-500"
+      style="font-family: var(--font-pexel);"
+    >
+      Reda Ezziani
+    </h1>
+    <p class="text-neutral-700 max-w-3xl text-shadow-2xs">
+      Welcome to my personal website! I'm Reda Ezziani, a passionate developer
+      and tech enthusiast. Here, you'll find my latest projects, blog posts, and
+      ways to connect with me. Feel free to explore and reach out!
+    </p>
+  </div>
+  <AboutMe />
+</Main>
