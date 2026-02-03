@@ -1,88 +1,77 @@
-import { Button } from "@/components/ui/button";
+import LanguageSwitcher from './language-switcher';
 
-interface NavbarProps {
-  logoText?: string;
-  onLogout?: () => void;
-}
-
-export default function Navbar({
-  logoText = "Portfolio",
-  onLogout,
-}: NavbarProps) {
+function NavBar() {
   return (
-    <nav className="sticky top-0 w-full border-b border-border px-4 md:px-20 flex justify-between h-14 bg-white z-10">
-      {/* Logo */}
-      <a
-        href="#"
-        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 200 160"
-          className="size-8"
-        >
-          <path
-            fill="currentColor"
-            d="M 75.36,45.39 C 80.93,35.58 86.31,26.09 92.56,15.10 C 119.73,63.00 145.09,109.48 170.40,155.88 C 169.04,157.80 167.65,157.30 166.40,157.30 C 151.24,157.35 136.08,157.24 120.92,157.43 C 118.89,157.47 117.64,156.09 116.65,153.63 C 99.72,120.88 82.67,88.19 65.56,55.54 C 64.37,53.63 64.13,52.28 65.39,50.29 C 68.18,45.21 70.61,39.92 75.36,45.39 Z"
-          />
-          <path
-            fill="currentColor"
-            d="M 15.00,157.32 C 9.54,157.33 4.58,157.33 -1.22,157.33 C 9.28,138.97 19.04,121.87 29.59,103.42 C 40.12,121.82 50.84,138.85 62.40,157.32 C 49.61,157.32 38.56,157.32 15.00,157.32 Z"
-          />
-        </svg>
-        {/* <span className="text-base font-semibold">{logoText}</span> */}
-      </a>
-
-      {/* Desktop Menu */}
-      <div className="hidden border border-x border-border px-2 border-y-transparent md:flex items-center gap-6">
-        <a
-          className="hover:opacity-80 border-r h-full w-12 flex justify-center items-center transition-opacity"
-          href=""
-        >
-          <svg
-            className="size-6"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
+    <div className="flex w-full z-50 fixed top-0 bg-zinc-950   justify-center items-start ">
+      <header className=" w-full  py-2 px-4 flex justify-between  lg:max-w-[100rem] items-center">
+        <a href="/" className="text-2xl font-bold text-white hover:text-blue-400 transition">
+          Seo 2x
+        </a>
+        <nav className="space-x-8 hidden md:block">
+          <a href="/" className="text-gray-50 text-sm hover:text-blue-500 transition">
+            Home
+          </a>
+          <a href="#services" className="text-gray-50 text-sm hover:text-blue-500 transition">
+            Services
+          </a>
+          <a
+            href="#pricing"
+            className="text-gray-50 text-sm hover:text-blue-500 transition"
           >
-            <path
-              fill="currentColor"
-              d="M5 2h4v2H7v2H5V2Zm0 10H3V6h2v6Zm2 2H5v-2h2v2Zm2 2v-2H7v2H3v-2H1v2h2v2h4v4h2v-4h2v-2H9Zm0 0v2H7v-2h2Zm6-12v2H9V4h6Zm4 2h-2V4h-2V2h4v4Zm0 6V6h2v6h-2Zm-2 2v-2h2v2h-2Zm-2 2v-2h2v2h-2Zm0 2h-2v-2h2v2Zm0 0h2v4h-2v-4Z"
-            />
-          </svg>
-        </a>
-        <a className=" hover:underline underline-offset-1" href="">
-          Contact Me
-        </a>
-      </div>
-
-      {/* Mobile Menu */}
-      <div className="md:hidden flex items-center gap-6">
-        <a className="hover:opacity-80  transition-opacity" href="">
-          <svg
-            className="size-6"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="currentColor"
-              d="M5 2h4v2H7v2H5V2Zm0 10H3V6h2v6Zm2 2H5v-2h2v2Zm2 2v-2H7v2H3v-2H1v2h2v2h4v4h2v-4h2v-2H9Zm0 0v2H7v-2h2Zm6-12v2H9V4h6Zm4 2h-2V4h-2V2h4v4Zm0 6V6h2v6h-2Zm-2 2v-2h2v2h-2Zm-2 2v-2h2v2h-2Zm0 2h-2v-2h2v2Zm0 0h2v4h-2v-4Z"
-            />
-          </svg>
-        </a>
-        <a className="hover:opacity-80 border border-border rounded-full size-9 flex justify-center items-center transition-opacity">
-          <svg
-            className="size-6"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M20 5H4v2h16V5zm0 4H4v2h16V9zM4 13h16v2H4v-2zm16 4H4v2h16v-2z"
-              fill="currentColor"
-            />
-          </svg>
-        </a>
-      </div>
-    </nav>
+            Pricing
+          </a>
+          <a href="/blog" className="text-gray-50 text-sm hover:text-blue-500 transition">
+            Blog
+          </a>
+        </nav>
+        <div className="flex gap-x-4 justify-center items-center">
+          <LanguageSwitcher />
+          <span className=" hidden  lg:flex">
+            <button className=" rounded-lg bg-blue-500 text-white font-semibold text-sm   px-6 py-2.5">
+              Get Started
+            </button>
+            <span className="rounded-lg bg-blue-500 flex justify-center items-center text-white font-semibold text-sm size-10 py-2.5">
+              <svg
+                className=" rotate-220"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M12 5v.5m0 3v1.5m0 3v6" />
+                <path d="M18 13l-6 6" />
+                <path d="M6 13l6 6" />
+              </svg>
+            </span>
+          </span>
+          <button className=" rounded-lg size-10 md:hidden flex justify-center items-center bg-zinc-900 text-zinc-200 cursor-pointer">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M4 6l16 0" />
+              <path d="M4 12l16 0" />
+              <path d="M4 18l16 0" />
+            </svg>
+          </button>
+        </div>
+      </header>
+    </div>
   );
 }
+
+export default NavBar;

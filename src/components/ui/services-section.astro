@@ -1,0 +1,181 @@
+---
+import { sanityClient } from 'sanity:client';
+import { getCurrentLanguage } from '@/utils/language';
+
+const servicesData = await sanityClient.fetch(
+  `*[_type == "servicesSection" && isActive == true][0]{
+    _id,
+    title,
+    heading,
+    subheading,
+    headingColor,
+    layout,
+    marginTop,
+    services[]{
+      title,
+      description,
+      icon,
+      link{
+        url,
+        text,
+        showArrow
+      },
+      cardStyle,
+      rotation,
+      backgroundColor,
+      textColor,
+      iconColor
+    }
+  }`,
+);
+
+// Get current language from URL
+const currentLang = getCurrentLanguage(Astro.url);
+
+const getLocalizedText = (array: any[], lang = currentLang) => {
+  return array?.find((item) => item._key === lang)?.value || '';
+};
+
+const getCardStyles = (cardStyle: string) => {
+  const styleMap: Record<
+    string,
+    {
+      bg: string;
+      text: string;
+      border: string;
+      rotation: string;
+      iconColor: string;
+      shineEffect: string;
+    }
+  > = {
+    'dark-rotated': {
+      bg: '',
+      text: 'text-zinc-50',
+      border: 'shadow',
+      rotation: '-rotate-2',
+      iconColor: 'text-zinc-200',
+      shineEffect: 'shine-corner',
+    },
+    light: {
+      bg: 'bg-zinc-50',
+      text: 'text-zinc-800',
+      border: 'border border-zinc-400/25',
+      rotation: '',
+      iconColor: 'text-zinc-500',
+      shineEffect: '',
+    },
+    dark: {
+      bg: '',
+      text: 'text-zinc-50',
+      border: 'shadow',
+      rotation: '',
+      iconColor: 'text-zinc-200',
+      shineEffect: 'shine-corner',
+    },
+  };
+
+  return styleMap[cardStyle] || styleMap['dark'];
+};
+---
+
+<section
+  id="services"
+  class=`flex flex-col px-4 gap-4 ${servicesData?.marginTop || 'mt-32'} justify-start items-start w-full lg:max-w-[100rem]`}
+>
+  <div class="flex flex-col gap-2">
+    <h2
+      class=`text-3xl font-bold ${servicesData?.headingColor || 'text-blue-500'}`}
+    >
+      {getLocalizedText(servicesData?.heading)}
+    </h2>
+    <p class="text-muted-foreground max-w-2xl">
+      {getLocalizedText(servicesData?.subheading)}
+    </p>
+  </div>
+
+  <article
+    class=`grid w-full relative mt-10 gap-6 ${servicesData?.layout || 'lg:grid-cols-4'}`}
+  >
+    {
+      servicesData?.services?.map((service: any) => {
+        const styles = getCardStyles(service.cardStyle);
+        const bg = service.backgroundColor || styles.bg;
+        const text = service.textColor || styles.text;
+        const border = styles.border;
+        const rotation = service.rotation || styles.rotation;
+        const iconColor = service.iconColor || styles.iconColor;
+        const shineEffect = styles.shineEffect;
+
+        return (
+          <div
+            class=`rounded-lg ${border} ${bg} ${rotation} ${text} ${shineEffect} flex h-60 flex-col justify-start items-start gap-2 px-4 py-6`}
+          >
+            {service.icon && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class=`mt-2 ${iconColor}`}
+                set:html={service.icon}
+              />
+            )}
+            <h3 class="text-xl font-semibold">
+              {getLocalizedText(service.title)}
+            </h3>
+            <p class="text-sm text-muted-foreground">
+              {getLocalizedText(service.description)}
+            </p>
+            {service.link && (
+              <a
+                href={service.link.url || '#'}
+                class="mt-auto text-blue-500 font-medium hover:underline text-sm"
+              >
+                {getLocalizedText(service.link.text)}
+                {service.link.showArrow && ' →'}
+              </a>
+            )}
+          </div>
+        );
+      })
+    }
+  </article>
+</section>
+
+<style>
+  .shine-corner {
+    position: relative;
+    z-index: 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    padding: 1.5rem 1rem;
+  }
+
+  .shine-corner::before {
+    content: '';
+    position: absolute;
+    z-index: -2;
+    left: -50%;
+    top: -50%;
+    width: 200%;
+    height: 200%;
+    background-color: #000;
+    background-repeat: no-repeat;
+    background-size: 100% 100%, 50% 50%;
+    background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+    background-image: linear-gradient(135deg, #1a1a1a, #38bdf8);
+  }
+
+  .shine-corner::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 2px;
+    top: 2px;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+    background: #27272a;
+    border-radius: 0.5rem;
+  }
+</style>

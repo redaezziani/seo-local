@@ -1,0 +1,240 @@
+---
+import { sanityClient } from 'sanity:client';
+import imageUrlBuilder from '@sanity/image-url';
+import Main from '@/layouts/main.astro';
+import NavBar from '@/components/react/nav-bar';
+import Footer from '@/components/ui/footer.astro';
+import { getCurrentLanguage } from '@/utils/language';
+
+// Get current language from URL
+const currentLang = getCurrentLanguage(Astro.url);
+
+// Fetch all blog posts
+const posts = await sanityClient.fetch(
+  `*[_type == "post"] | order(publishedAt desc){
+    _id,
+    title,
+    slug,
+    excerpt,
+    mainImage{
+      asset,
+      alt,
+      caption
+    },
+    categories[]->{
+      title,
+      slug
+    },
+    publishedAt,
+    featured
+  }`,
+);
+
+// Fetch all categories for filter
+const categories = await sanityClient.fetch(
+  `*[_type == "category"] | order(title asc){
+    _id,
+    title,
+    slug
+  }`,
+);
+
+const builder = imageUrlBuilder(sanityClient);
+const urlFor = (source: any) => builder.image(source);
+
+const getLocalizedText = (array: any[], lang = currentLang) => {
+  return array?.find((item) => item._key === lang)?.value || '';
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+---
+
+<Main content={{ title: 'Blog - SEO Insights & Tips' }}>
+  <NavBar client:load />
+
+  <!-- Hero Section -->
+  <section class="w-full bg-zinc-900 text-white py-20 px-4 mt-16">
+    <div class="max-w-7xl mx-auto text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        SEO Insights & Resources
+      </h1>
+      <p class="text-gray-300 text-lg max-w-2xl mx-auto">
+        Expert tips, guides, and strategies to boost your local SEO and grow
+        your business online.
+      </p>
+    </div>
+  </section>
+
+  <!-- Categories Filter -->
+  {
+    categories.length > 0 && (
+      <section class="w-full bg-white py-6 px-4 border-b sticky top-16 z-40">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex flex-wrap gap-3 justify-center">
+            <button
+              class="category-filter px-4 py-2 rounded-full text-sm font-medium bg-blue-500 text-white"
+              data-category="all"
+            >
+              All Posts
+            </button>
+            {categories.map((category: any) => (
+              <button
+                class="category-filter px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+                data-category={category.slug.current}
+              >
+                {getLocalizedText(category.title)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Blog Posts Grid -->
+  <section class="w-full bg-gray-50 py-16 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div
+        id="posts-grid"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      >
+        {
+          posts.map((post: any) => (
+            <article
+              class="blog-post group bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
+              data-categories={post.categories
+                ?.map((c: any) => c.slug.current)
+                .join(',')}
+            >
+              <a href={`/blog/${post.slug.current}`} class="block">
+                {/* Image */}
+                {post.mainImage?.asset && (
+                  <div class="relative overflow-hidden h-48">
+                    <img
+                      src={urlFor(post.mainImage.asset).width(600).url()}
+                      alt={post.mainImage.alt || getLocalizedText(post.title)}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {post.featured && (
+                      <span class="absolute top-4 left-4 bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        Featured
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Content */}
+                <div class="p-6">
+                  {/* Categories & Date */}
+                  <div class="flex flex-wrap items-center gap-3 mb-3">
+                    {post.categories &&
+                      post.categories
+                        .slice(0, 2)
+                        .map((category: any) => (
+                          <span class="text-xs font-medium text-blue-500 bg-blue-50 px-3 py-1 rounded-full">
+                            {getLocalizedText(category.title)}
+                          </span>
+                        ))}
+                    {post.publishedAt && (
+                      <span class="text-xs text-gray-500">
+                        {formatDate(post.publishedAt)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Title */}
+                  <h3 class="text-xl font-bold text-zinc-900 group-hover:text-blue-500 transition-colors mb-2">
+                    {getLocalizedText(post.title)}
+                  </h3>
+
+                  {/* Excerpt */}
+                  {post.excerpt && (
+                    <p class="text-gray-600 text-sm line-clamp-3">
+                      {getLocalizedText(post.excerpt)}
+                    </p>
+                  )}
+
+                  {/* Read More Link */}
+                  <div class="mt-4 flex items-center text-blue-500 font-medium text-sm">
+                    Read More
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="ml-1 group-hover:translate-x-1 transition-transform"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </a>
+            </article>
+          ))
+        }
+      </div>
+
+      <!-- No Results Message -->
+      <div id="no-results" class="hidden text-center py-12">
+        <p class="text-gray-500 text-lg">No posts found in this category.</p>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Main>
+
+<script>
+  // Category filtering
+  const filterButtons = document.querySelectorAll('.category-filter');
+  const posts = document.querySelectorAll('.blog-post');
+  const noResults = document.getElementById('no-results');
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const category = button.getAttribute('data-category');
+
+      // Update active button
+      filterButtons.forEach((btn) => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-700');
+      });
+      button.classList.remove('bg-gray-100', 'text-gray-700');
+      button.classList.add('bg-blue-500', 'text-white');
+
+      // Filter posts
+      let visibleCount = 0;
+      posts.forEach((post) => {
+        const postCategories = post.getAttribute('data-categories') || '';
+        if (
+          category === 'all' ||
+          postCategories.split(',').includes(category)
+        ) {
+          post.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          post.classList.add('hidden');
+        }
+      });
+
+      // Show/hide no results message
+      if (visibleCount === 0) {
+        noResults?.classList.remove('hidden');
+      } else {
+        noResults?.classList.add('hidden');
+      }
+    });
+  });
+</script>

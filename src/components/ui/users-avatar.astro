@@ -1,0 +1,57 @@
+---
+const users = [
+  {
+    name: 'Richard Nelson',
+    image:
+      'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200',
+  },
+  {
+    name: 'Avery Johnson',
+    image:
+      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200',
+  },
+  {
+    name: 'Jordan Lee',
+    image:
+      'https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/userImage/userImage1.png',
+  },
+  {
+    name: 'Noah Patel',
+    image:
+      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200',
+  },
+  {
+    name: 'Oliver Brooks',
+    image: 'https://randomuser.me/api/portraits/men/75.jpg',
+  },
+];
+
+// configuration
+const maxVisible = 4;
+const extraCount = 30;
+
+const visibleUsers = users.slice(0, maxVisible);
+---
+
+<div class="flex -space-x-3 items-center">
+  {
+    visibleUsers.map((user) => (
+      <img
+        src={user.image}
+        alt={user.name}
+        title={user.name}
+        class="size-8 rounded-full border-2 border-white"
+        loading="lazy"
+      />
+    ))
+  }
+
+  <!-- +X avatar -->
+  <div
+    class="size-8 rounded-full border-2 border-white bg-slate-100 text-slate-700
+           flex items-center justify-center text-xs font-medium"
+    title={`${extraCount} more users`}
+  >
+    +{extraCount}
+  </div>
+</div>

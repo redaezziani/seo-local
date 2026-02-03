@@ -1,0 +1,256 @@
+---
+import { sanityClient } from 'sanity:client';
+import imageUrlBuilder from '@sanity/image-url';
+import { getCurrentLanguage } from '@/utils/language';
+
+const blogData = await sanityClient.fetch(
+  `*[_type == "blogSection" && isActive == true][0]{
+    _id,
+    heading,
+    subheading,
+    displayType,
+    postsToShow,
+    selectedPosts,
+    showCategories,
+    showDate,
+    showExcerpt,
+    ctaButton,
+    layout,
+    backgroundColor
+  }`,
+);
+
+// Fetch posts based on display type
+let posts = [];
+if (blogData) {
+  if (blogData.displayType === 'custom' && blogData.selectedPosts) {
+    const postIds = blogData.selectedPosts.map((p: any) => p._ref);
+    posts = await sanityClient.fetch(
+      `*[_type == "post" && _id in $ids]{
+        _id,
+        title,
+        slug,
+        excerpt,
+        mainImage{
+          asset,
+          alt,
+          caption
+        },
+        categories[]->{
+          title,
+          slug
+        },
+        publishedAt,
+        featured
+      }`,
+      { ids: postIds },
+    );
+  } else if (blogData.displayType === 'featured') {
+    posts = await sanityClient.fetch(
+      `*[_type == "post" && featured == true] | order(publishedAt desc)[0...${blogData.postsToShow || 3}]{
+        _id,
+        title,
+        slug,
+        excerpt,
+        mainImage{
+          asset,
+          alt,
+          caption
+        },
+        categories[]->{
+          title,
+          slug
+        },
+        publishedAt,
+        featured
+      }`,
+    );
+  } else {
+    // Latest posts
+    posts = await sanityClient.fetch(
+      `*[_type == "post"] | order(publishedAt desc)[0...${blogData.postsToShow || 3}]{
+        _id,
+        title,
+        slug,
+        excerpt,
+        mainImage{
+          asset,
+          alt,
+          caption
+        },
+        categories[]->{
+          title,
+          slug
+        },
+        publishedAt,
+        featured
+      }`,
+    );
+  }
+}
+
+const builder = imageUrlBuilder(sanityClient);
+const urlFor = (source: any) => builder.image(source);
+
+// Get current language from URL
+const currentLang = getCurrentLanguage(Astro.url);
+
+const getLocalizedText = (array: any[], lang = currentLang) => {
+  return array?.find((item) => item._key === lang)?.value || '';
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+const getLayoutClass = () => {
+  switch (blogData?.layout) {
+    case 'grid-2':
+      return 'grid-cols-1 md:grid-cols-2';
+    case 'list':
+      return 'grid-cols-1';
+    case 'featured-grid':
+      return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+    default:
+      return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+  }
+};
+---
+
+{
+  blogData && posts.length > 0 && (
+    <section
+      class={`w-full ${blogData?.backgroundColor || 'bg-white'} py-16 px-4`}
+    >
+      <div class="max-w-7xl mx-auto">
+        {/* Section Header */}
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-4">
+            {getLocalizedText(blogData.heading)}
+          </h2>
+          {blogData.subheading && (
+            <p class="text-gray-600 max-w-2xl mx-auto">
+              {getLocalizedText(blogData.subheading)}
+            </p>
+          )}
+        </div>
+
+        <div class={`grid ${getLayoutClass()} gap-8`}>
+          {posts.map((post: any, index: number) => {
+            const isFeatured =
+              blogData.layout === 'featured-grid' && index === 0;
+            return (
+              <article
+                class={`group      ${isFeatured ? 'md:col-span-2 lg:col-span-3' : ''}`}
+              >
+                <a href={`/blog/${post.slug.current}`} class="block">
+                  {post.mainImage?.asset && (
+                    <div
+                      class={`relative bg-white rounded-xl overflow-hidden h-60`}
+                    >
+                      <img
+                        src={urlFor(post.mainImage.asset).width(800).url()}
+                        alt={post.mainImage.alt || getLocalizedText(post.title)}
+                        class="w-full h-full  object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {post.featured && (
+                        <span class="absolute top-4 left-4 bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Content */}
+                  <div class="py-6">
+                    {/* Categories & Date */}
+                    <div class="flex flex-wrap items-center gap-3 mb-3">
+                      {blogData.showCategories &&
+                        post.categories &&
+                        post.categories
+                          .slice(0, 2)
+                          .map((category: any) => (
+                            <span class="text-xs font-medium text-blue-500 bg-blue-50 px-3 py-1 rounded-full">
+                              {getLocalizedText(category.title)}
+                            </span>
+                          ))}
+                      {blogData.showDate && post.publishedAt && (
+                        <span class="text-xs text-gray-500">
+                          {formatDate(post.publishedAt)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Title */}
+                    <h3
+                      class={`font-bold text-zinc-900 group-hover:text-blue-500 transition-colors mb-2 ${isFeatured ? 'text-2xl' : 'text-xl'}`}
+                    >
+                      {getLocalizedText(post.title)}
+                    </h3>
+
+                    {/* Excerpt */}
+                    {blogData.showExcerpt && post.excerpt && (
+                      <p class="text-gray-600 text-sm line-clamp-3">
+                        {getLocalizedText(post.excerpt)}
+                      </p>
+                    )}
+
+                    {/* Read More Link */}
+                    <div class="mt-4 flex items-center text-blue-500 font-medium text-sm">
+                      Read More
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="ml-1 group-hover:translate-x-1 transition-transform"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </a>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* CTA Button */}
+        {blogData.ctaButton?.show && blogData.ctaButton?.text && (
+          <div class="text-center mt-12">
+            <a
+              href={blogData.ctaButton.link || '/blog'}
+              class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-500 text-white font-semibold px-8 py-3 rounded-lg transition-colors"
+            >
+              {getLocalizedText(blogData.ctaButton.text)}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}

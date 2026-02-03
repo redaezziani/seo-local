@@ -1,8 +1,6 @@
 ---
-import "../styles/global.css";
+import '../styles/global.css';
 const { content } = Astro.props;
-import Sidebar from "@/components/react/side-bar";
-import Navbar from "@/components/react/nav-bar";
 ---
 
 <html lang="en">
@@ -12,14 +10,18 @@ import Navbar from "@/components/react/nav-bar";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{content.title}</title>
   </head>
-  <body class="min-h-screen font-onest flex bg-neutral-50/20">
-    <Sidebar client:load />
+  <body class="min-h-screen flex flex-col relative items-center justify-start">
+    <slot />
 
-    <div class="md:flex-1 w-full flex flex-col">
-      <Navbar client:load />
-      <main class="flex-1 relative">
-        <slot />
-      </main>
-    </div>
+    <script>
+      // Initialize language on page load
+      if (typeof window !== 'undefined') {
+        const lang = localStorage.getItem('language') || 'en';
+        document.documentElement.lang = lang;
+
+        // Make language available globally
+        (window as any).currentLanguage = lang;
+      }
+    </script>
   </body>
 </html>

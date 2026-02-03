@@ -1,0 +1,198 @@
+---
+import { sanityClient } from 'sanity:client';
+import { getCurrentLanguage } from '@/utils/language';
+
+const footerData = await sanityClient.fetch(
+  `*[_type == "footer" && isActive == true][0]{
+    _id,
+    companyName,
+    tagline,
+    description,
+    socialLinks[]{
+      platform,
+      url,
+      icon
+    },
+    quickLinks[]{
+      title,
+      links[]{
+        label,
+        url
+      }
+    },
+    contactInfo{
+      email,
+      phone,
+      address
+    },
+    copyrightText,
+    showSocialLinks,
+    backgroundColor,
+    textColor
+  }`,
+);
+
+// Get current language from URL
+const currentLang = getCurrentLanguage(Astro.url);
+
+const getLocalizedText = (array: any[], lang = currentLang) => {
+  return array?.find((item) => item._key === lang)?.value || '';
+};
+---
+
+{
+  footerData && (
+    <footer
+      class={`w-full ${footerData?.backgroundColor || 'bg-zinc-900'} ${footerData?.textColor || 'text-gray-300'} py-12 px-4`}
+    >
+      <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          <!-- Company Info -->
+          <div class="space-y-4">
+            <h3 class="text-white text-xl font-bold">
+              {footerData?.companyName || 'Seo 2x'}
+            </h3>
+            {footerData?.tagline && (
+              <p class="text-blue-500 text-sm font-medium">
+                {getLocalizedText(footerData.tagline)}
+              </p>
+            )}
+            {footerData?.description && (
+              <p class="text-sm text-gray-400">
+                {getLocalizedText(footerData.description)}
+              </p>
+            )}
+          </div>
+
+          <!-- Quick Links Sections -->
+          {footerData?.quickLinks?.map((section: any) => (
+            <div class="space-y-4">
+              <h4 class="text-white font-semibold">
+                {getLocalizedText(section.title)}
+              </h4>
+              <ul class="space-y-2">
+                {section.links?.map((link: any) => (
+                  <li>
+                    <a
+                      href={link.url || '#'}
+                      class="text-sm text-gray-400 hover:text-blue-500 transition-colors"
+                    >
+                      {getLocalizedText(link.label)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          <!-- Contact Info -->
+          {footerData?.contactInfo && (
+            <div class="space-y-4">
+              <h4 class="text-white font-semibold">Contact</h4>
+              <ul class="space-y-2 text-sm text-gray-400">
+                {footerData.contactInfo.email && (
+                  <li class="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect width="20" height="16" x="2" y="4" rx="2" />
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                    </svg>
+                    <a
+                      href={`mailto:${footerData.contactInfo.email}`}
+                      class="hover:text-blue-500 transition-colors"
+                    >
+                      {footerData.contactInfo.email}
+                    </a>
+                  </li>
+                )}
+                {footerData.contactInfo.phone && (
+                  <li class="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                    <a
+                      href={`tel:${footerData.contactInfo.phone}`}
+                      class="hover:text-blue-500 transition-colors"
+                    >
+                      {footerData.contactInfo.phone}
+                    </a>
+                  </li>
+                )}
+                {footerData.contactInfo.address && (
+                  <li class="flex items-start gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mt-0.5"
+                    >
+                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <span>{footerData.contactInfo.address}</span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <!-- Social Links & Copyright -->
+        <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p class="text-sm text-gray-500">
+            {footerData?.copyrightText ||
+              `© ${new Date().getFullYear()} Seo 2x. All rights reserved.`}
+          </p>
+
+          {footerData?.showSocialLinks && footerData?.socialLinks && (
+            <div class="flex gap-4">
+              {footerData.socialLinks.map((social: any) => (
+                <a
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-gray-400 hover:text-blue-500 transition-colors"
+                  aria-label={social.platform}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    set:html={social.icon}
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </footer>
+  )
+}

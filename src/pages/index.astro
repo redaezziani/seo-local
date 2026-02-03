@@ -1,23 +1,20 @@
 ---
-import AboutMe from "@/components/react/about-me";
-import Main from "@/layouts/main.astro";
+import NavBar from '@/components/react/nav-bar';
+import MainSection from '@/components/ui/main-section.astro';
+import StatsSection from '@/components/ui/stats-section.astro';
+import ServicesSection from '@/components/ui/services-section.astro';
+import Main from '@/layouts/main.astro';
+import PricingSection from '@/components/ui/pricing-section.astro';
+import BlogSection from '@/components/ui/blog-section.astro';
+import Footer from '@/components/ui/footer.astro';
 ---
 
-<Main content={{ title: "Home" }}>
-  <div
-    class="flex flex-col justify-start items-start gap-6 mt-20 px-4 md:px-20"
-  >
-    <h1
-      class="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-rose-500 to-red-500"
-      style="font-family: var(--font-pexel);"
-    >
-      Reda Ezziani
-    </h1>
-    <p class="text-neutral-700 max-w-3xl text-shadow-2xs">
-      Welcome to my personal website! I'm Reda Ezziani, a passionate developer
-      and tech enthusiast. Here, you'll find my latest projects, blog posts, and
-      ways to connect with me. Feel free to explore and reach out!
-    </p>
-  </div>
-  <AboutMe />
+<Main content={{ title: 'Home' }}>
+  <NavBar client:load />
+  <MainSection />
+  <StatsSection />
+  <ServicesSection />
+  <PricingSection />
+  <BlogSection />
+  <Footer />
 </Main>

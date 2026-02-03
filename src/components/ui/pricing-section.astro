@@ -1,0 +1,260 @@
+---
+import { sanityClient } from 'sanity:client';
+import { getCurrentLanguage } from '@/utils/language';
+
+interface Feature {
+  text: string;
+  included: boolean;
+}
+
+interface Plan {
+  title: string;
+  slug: string;
+  monthlyPrice: number;
+  yearlyDiscount: number;
+  isPopular: boolean;
+  features: Feature[];
+  ctaText: string;
+  ctaLink: string;
+  displayOrder: number;
+}
+
+interface PricingData {
+  heading: string;
+  subheading: string;
+  showToggle: boolean;
+  toggleMonthlyLabel: string;
+  toggleYearlyLabel: string;
+  yearlyDiscountBadge: string;
+  plans: Plan[];
+}
+
+// Get current language from URL
+const currentLang = getCurrentLanguage(Astro.url);
+
+const pricingData: PricingData | null = await sanityClient.fetch(`
+  *[_type == "pricingSection" && isActive == true][0]{
+    "heading": heading[_key == $lang][0].value,
+    "subheading": subheading[_key == $lang][0].value,
+    showToggle,
+    "toggleMonthlyLabel": toggleMonthlyLabel[_key == $lang][0].value,
+    "toggleYearlyLabel": toggleYearlyLabel[_key == $lang][0].value,
+    "yearlyDiscountBadge": yearlyDiscountBadge[_key == $lang][0].value,
+    plans[]->{
+      "title": title[_key == $lang][0].value,
+      "slug": slug.current,
+      monthlyPrice,
+      yearlyDiscount,
+      isPopular,
+      "features": features[]{
+        "text": feature[_key == $lang][0].value,
+        included
+      },
+      "ctaText": ctaText[_key == $lang][0].value,
+      ctaLink,
+      displayOrder
+    }
+  }
+`, { lang: currentLang });
+
+console.log('Fetched pricing data from Sanity:', pricingData);
+
+if (!pricingData) {
+  console.error('No active pricing section found');
+}
+
+console.log('Pricing Data:', pricingData);
+
+const sortedPlans =
+  pricingData?.plans?.sort((a, b) => a.displayOrder - b.displayOrder) || [];
+---
+
+{
+  pricingData && (
+    <div id="pricing" class="flex flex-col w-full items-center py-16 px-4">
+      <h1 class="text-3xl md:text-4xl text-center mb-3 text-neutral-800">
+        {pricingData.heading}
+      </h1>
+      <p
+        class="text-neutral-600 text-center mb-8 text-sm"
+        set:html={pricingData.subheading.replace(
+          /\n/g,
+          '<br class="hidden md:block" />',
+        )}
+      />
+
+      {pricingData.showToggle && (
+        <div class="relative p-1 bg-white border border-gray-200 rounded-full inline-flex items-center mb-16 w-60">
+          <div
+            id="toggle-slider"
+            class="absolute -z-10 w-[calc(50%-4px)] h-[53px] rounded-full bg-linear-to-r from-blue-500 to-blue-500/70 transition-transform duration-300 ease-in-out pointer-events-none translate-x-0"
+          />
+
+          <button
+            id="btn-monthly"
+            class="relative z-10 flex-1 py-2.5 rounded-full text-sm font-medium text-center transition-colors duration-300 text-blue-500 cursor-pointer"
+          >
+            {pricingData.toggleMonthlyLabel}
+          </button>
+
+          <button
+            id="btn-yearly"
+            class="relative z-10 flex-1 py-2.5 rounded-full text-sm font-medium text-center flex items-center justify-center gap-1 transition-colors duration-300 text-gray-500 hover:text-gray-900 cursor-pointer"
+          >
+            {pricingData.toggleYearlyLabel}{' '}
+            <span class="text-xs">{pricingData.yearlyDiscountBadge}</span>
+          </button>
+        </div>
+      )}
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full items-end">
+        {sortedPlans.map((plan, index) => (
+          <div>
+            {plan.isPopular ? (
+              <div class="bg-linear-to-r from-blue-500 to-blue-300 rounded-3xl p-2 shadow-xl hover:shadow-lg transition-shadow">
+                <p class="text-center text-blue-500 text-sm py-1.5">Popular</p>
+                <div class="rounded-3xl p-6 bg-white">
+                  <h3 class="text-neutral-700 text-sm mb-6">{plan.title}</h3>
+                  <div class="flex items-baseline gap-1 mb-8">
+                    <span
+                      data-plan-id={index}
+                      class="plan-price text-[28px] text-neutral-900"
+                    >
+                      ${plan.monthlyPrice}
+                    </span>
+                    <span class="text-neutral-600 text-xs">/ month</span>
+                  </div>
+                  <ul class="space-y-4 mb-8">
+                    {plan.features.map((feature) => (
+                      <li class="flex items-center gap-3 text-sm text-neutral-600">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="17"
+                          height="17"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="lucide lucide-circle-check-icon lucide-circle-check"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="m9 12 2 2 4-4" />
+                        </svg>
+                        {feature.text}
+                      </li>
+                    ))}
+                  </ul>
+                  <button class="w-full py-3 rounded-full cursor-pointer bg-linear-to-r from-blue-500 to-blue-500/70 text-white text-sm hover:opacity-95 transition-opacity">
+                    {plan.ctaText}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div class="rounded-3xl p-6 bg-white border border-neutral-200 hover:shadow-lg transition-shadow">
+                <h3 class="text-neutral-700 text-sm mb-6">{plan.title}</h3>
+                <div class="flex items-baseline gap-1 mb-8">
+                  <span
+                    data-plan-id={index}
+                    class="plan-price text-[28px] text-neutral-900"
+                  >
+                    ${plan.monthlyPrice}
+                  </span>
+                  <span class="text-neutral-600 text-xs">/ month</span>
+                </div>
+                <ul class="space-y-4 mb-8">
+                  {plan.features.map((feature) => (
+                    <li class="flex items-center gap-3 text-sm text-neutral-600">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="17"
+                        height="17"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-circle-check-icon lucide-circle-check"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="m9 12 2 2 4-4" />
+                      </svg>
+                      {feature.text}
+                    </li>
+                  ))}
+                </ul>
+                <button class="w-full py-3 rounded-full cursor-pointer bg-linear-to-r from-blue-500 to-blue-500/70 text-white text-sm hover:opacity-95 transition-opacity">
+                  {plan.ctaText}
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+<script define:vars={{ plans: sortedPlans }}>
+  const btnMonthly = document.getElementById('btn-monthly');
+  const btnYearly = document.getElementById('btn-yearly');
+  const slider = document.getElementById('toggle-slider');
+  const priceElements = document.querySelectorAll('.plan-price');
+
+  let isYearly = false;
+
+  function updatePricing() {
+    if (isYearly) {
+      slider?.classList.remove('translate-x-0');
+      slider?.classList.add('translate-x-full');
+
+      btnMonthly?.classList.remove('text-blue-500');
+      btnMonthly?.classList.add('text-gray-500', 'hover:text-gray-900');
+
+      btnYearly?.classList.remove('text-gray-500', 'hover:text-gray-900');
+      btnYearly?.classList.add('text-blue-500');
+
+      priceElements.forEach((el) => {
+        const planId = parseInt(el.getAttribute('data-plan-id') || '0');
+        const plan = plans[planId];
+        if (plan) {
+          const yearlyPrice =
+            plan.monthlyPrice -
+            Math.round(plan.monthlyPrice * (plan.yearlyDiscount / 100));
+          el.textContent = `$${yearlyPrice}`;
+        }
+      });
+    } else {
+      slider?.classList.remove('translate-x-full');
+      slider?.classList.add('translate-x-0');
+
+      btnMonthly?.classList.remove('text-gray-500', 'hover:text-gray-900');
+      btnMonthly?.classList.add('text-blue-500');
+
+      btnYearly?.classList.remove('text-blue-500');
+      btnYearly?.classList.add('text-gray-500', 'hover:text-gray-900');
+
+      priceElements.forEach((el) => {
+        const planId = parseInt(el.getAttribute('data-plan-id') || '0');
+        const plan = plans[planId];
+        if (plan) {
+          el.textContent = `$${plan.monthlyPrice}`;
+        }
+      });
+    }
+  }
+
+  btnMonthly?.addEventListener('click', () => {
+    isYearly = false;
+    updatePricing();
+  });
+
+  btnYearly?.addEventListener('click', () => {
+    isYearly = true;
+    updatePricing();
+  });
+
+  updatePricing();
+</script>
